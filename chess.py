@@ -1,5 +1,4 @@
 from abc import ABCMeta, abstractmethod
-#from crayon import *
 
 
 class Board:
@@ -21,33 +20,33 @@ class Board:
         # Pawns
         for x in range(self.sizeX):
             self.places[x][1] = Pawn(x, 1, 1, 0)
-            self.places[x][6] = Pawn(x, 6, 0, 1)
+            self.places[x][6] = Pawn(x, 6, -1, 1)
 
         # Kings
         self.places[3][0] = King(3, 0, 1, 0)
-        self.places[4][7] = King(4, 7, 0, 1)
+        self.places[4][7] = King(4, 7, -1, 1)
 
         # Queens
         self.places[4][0] = Queen(4, 0, 1, 0)
-        self.places[3][7] = Queen(3, 7, 0, 1)
+        self.places[3][7] = Queen(3, 7, -1, 1)
 
         # Bishops
         self.places[2][0] = Bishop(2, 0, 1, 0)
         self.places[5][0] = Bishop(5, 0, 1, 0)
-        self.places[2][7] = Bishop(2, 7, 0, 1)
-        self.places[5][7] = Bishop(5, 7, 0, 1)
+        self.places[2][7] = Bishop(2, 7, -1, 1)
+        self.places[5][7] = Bishop(5, 7, -1, 1)
 
         # Knights
         self.places[1][0] = Knight(1, 0, 1, 0)
         self.places[6][0] = Knight(6, 0, 1, 0)
-        self.places[1][7] = Knight(1, 7, 0, 1)
-        self.places[6][7] = Knight(6, 7, 0, 1)
+        self.places[1][7] = Knight(1, 7, -1, 1)
+        self.places[6][7] = Knight(6, 7, -1, 1)
 
         # Rooks
         self.places[0][0] = Rook(0, 0, 1, 0)
         self.places[7][0] = Rook(7, 0, 1, 0)
-        self.places[0][7] = Rook(0, 7, 0, 1)
-        self.places[7][7] = Rook(7, 7, 0, 1)
+        self.places[0][7] = Rook(0, 7, -1, 1)
+        self.places[7][7] = Rook(7, 7, -1, 1)
 
     def display(self):
         for y in range(self.sizeY):
@@ -80,28 +79,38 @@ class Board:
             if piece_to_move.valid_move(target_x, target_y, game.current_player):
                 if self.get_piece(target_x, target_y) is not None:
                     game.players[game.current_player].captured_pieces.append(self.get_piece(target_x, target_y))
+                    print("Player {} captured Player {}'s {} at {}, {}".format(game.current_player,
+                                                                               game.current_player,
+                                                                               self.get_piece(target_x, target_y).type,
+                                                                               target_x,
+                                                                               target_y))
+                    if self.get_piece(target_x, target_y).type == "King":
+                        self.game.is_over = True
                 self.places[target_x][target_y] = piece_to_move
                 self.places[piece_x][piece_y] = None
                 return True
-            else:
-                print("Is that your piece?")
         return False
 
 
 class Piece(metaclass=ABCMeta):
-    def __init__(self, x, y, owner):
+    def __init__(self, x, y, direction, owner):
         self.in_play = True
         self.type = None
         self.x = x
         self.y = y
         self.owner = owner
+        self.direction = direction
 
     def __str__(self):
         return self.type+": "+self.in_play
 
     @abstractmethod
     def valid_move(self, target_x, target_y, current_player):
-        return None
+        if current_player != self.owner:
+            print("Is that your piece?")
+            return False
+        if self.x == target_x and self.y == target_y:
+            return False
 
 
 class Player:
@@ -112,14 +121,17 @@ class Player:
 
 class Pawn(Piece):
     def __init__(self, x, y, direction, owner):
-        self.x = x
-        self.y = y
+        super().__init__(x, y, direction, owner)
         self.type = "Pawn"
-        self.direction = direction
-        self.owner = owner
 
     def valid_move(self, target_x, target_y, current_player):
-        return current_player == self.owner
+        super()
+        if target_y != self.y + self.direction and target_y != self.y + 2 * self.direction:
+            return False
+        if target_x > self.x + 1 or target_x < self.x - 1:
+            return False
+        # Straight move
+        return True
 
     def __str__(self):
         return "P"
@@ -127,14 +139,15 @@ class Pawn(Piece):
 
 class King(Piece):
     def __init__(self, x, y, direction, owner):
-        self.x = x
-        self.y = y
+        super().__init__(x, y, direction, owner)
         self.type = "King"
-        self.direction = direction
-        self.owner = owner
 
     def valid_move(self, target_x, target_y, current_player):
-        return current_player == self.owner
+        super()
+        if self.x - 1 <= target_x <= self.x + 1 and self.y - 1 <= target_y <= self.y + 1:
+            return True
+        else:
+            return False
 
     def __str__(self):
         return "K"
@@ -142,14 +155,17 @@ class King(Piece):
 
 class Queen(Piece):
     def __init__(self, x, y, direction, owner):
-        self.x = x
-        self.y = y
+        super().__init__(x, y, direction, owner)
         self.type = "Queen"
-        self.direction = direction
-        self.owner = owner
 
     def valid_move(self, target_x, target_y, current_player):
-        return current_player == self.owner
+        super()
+        if (target_x - self.x) % (target_y - self.y) == 0 or\
+                target_y == self.y or\
+                target_x == self.x:
+            return True
+        else:
+            return False
 
     def __str__(self):
         return "Q"
@@ -157,14 +173,15 @@ class Queen(Piece):
 
 class Bishop(Piece):
     def __init__(self, x, y, direction, owner):
-        self.x = x
-        self.y = y
+        super().__init__(x, y, direction, owner)
         self.type = "Bishop"
-        self.direction = direction
-        self.owner = owner
 
     def valid_move(self, target_x, target_y, current_player):
-        return current_player == self.owner
+        super()
+        if (target_x - self.x) % (target_y - self.y) == 0:
+            return True
+        else:
+            return False
 
     def __str__(self):
         return "B"
@@ -172,14 +189,16 @@ class Bishop(Piece):
 
 class Knight(Piece):
     def __init__(self, x, y, direction, owner):
-        self.x = x
-        self.y = y
+        super().__init__(x, y, direction, owner)
         self.type = "Knight"
-        self.direction = direction
-        self.owner = owner
 
     def valid_move(self, target_x, target_y, current_player):
-        return current_player == self.owner
+        super()
+        if (abs(target_x - self.x) == 2 and abs(target_y - self.y) == 3) or \
+                (abs(target_x - self.x) == 3 and abs(target_y - self.y) == 3):
+            return True
+        else:
+            return False
 
     def __str__(self):
         return "H"
@@ -187,14 +206,15 @@ class Knight(Piece):
 
 class Rook(Piece):
     def __init__(self, x, y, direction, owner):
-        self.x = x
-        self.y = y
+        super().__init__(x, y, direction, owner)
         self.type = "Rook"
-        self.direction = direction
-        self.owner = owner
 
     def valid_move(self, target_x, target_y, current_player):
-        return current_player == self.owner
+        super()
+        if target_y == self.y or target_x == self.x:
+            return True
+        else:
+            return False
 
     def __str__(self):
         return "R"

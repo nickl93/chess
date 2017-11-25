@@ -49,7 +49,12 @@ class Board:
         self.places[7][7] = Rook(7, 7, -1, 1)
 
     def display(self):
+        print("  ", end="")
+        for w in range(self.sizeX):
+            print(str(w) + " ", end="")
+        print()
         for y in range(self.sizeY):
+            print(str(y) + " ", end="")
             for x in range(self.sizeX):
                 if x != self.sizeX-1:
                     print(self.stringify(self.places[x][y])+"|", end="")
@@ -119,7 +124,7 @@ class Piece(metaclass=ABCMeta):
 
 class Player:
     def __init__(self, colour):
-        self.color = None
+        self.color = colour
         self.captured_pieces = list()
 
 
@@ -152,6 +157,7 @@ class King(Piece):
         if self.x - 1 <= target_x <= self.x + 1 and self.y - 1 <= target_y <= self.y + 1:
             return True
         else:
+            # Check for castling
             return False
 
     def __str__(self):
@@ -249,7 +255,7 @@ class Game:
                 if move_result is True:
                     self.current_player = (self.current_player + 1) % 2
                     return coordinates
-        print("Invalid Move")
+        print("Invalid Move - Usage: <Current X> <Current Y> <Target X> <Target Y>")
         return None
 
     def coordinates_okay(self, coordinates):

@@ -56,8 +56,8 @@ class Board:
         for y in range(self.sizeY):
             print(str(y) + " ", end="")
             for x in range(self.sizeX):
-                if x != self.sizeX-1:
-                    print(self.stringify(self.places[x][y])+"|", end="")
+                if x != self.sizeX - 1:
+                    print(self.stringify(self.places[x][y]) + "|", end="")
                 else:
                     print(self.stringify(self.places[x][y]), end="")
             print("")
@@ -74,6 +74,7 @@ class Board:
     """
     Assumes coordinates have already been verified.
     """
+
     def attempt_move(self, coordinates):
         piece_x = coordinates[0]
         piece_y = coordinates[1]
@@ -86,11 +87,11 @@ class Board:
                 if captured_piece is not None and captured_piece.owner != game.current_player:
                     captured_piece.in_play = False
                     game.players[game.current_player].captured_pieces.append(captured_piece)
-                    print("Player {} captured Player {}'s {} at {}, {}".format(game.current_player,
-                                                                               game.current_player,
-                                                                               captured_piece.type,
-                                                                               target_x,
-                                                                               target_y))
+                    print("Player {} captured Player {}'s {} at ({}, {})".format(game.current_player,
+                                                                                 game.current_player,
+                                                                                 captured_piece.type,
+                                                                                 target_x,
+                                                                                 target_y))
                     if self.get_piece(target_x, target_y).type == "King":
                         self.game.is_over = True
                 self.places[target_x][target_y] = piece_to_move
@@ -111,7 +112,7 @@ class Piece(metaclass=ABCMeta):
         self.moves = 0
 
     def __str__(self):
-        return self.type+": "+self.in_play
+        return self.type + ": " + self.in_play
 
     @abstractmethod
     def valid_move(self, target_x, target_y, current_player):
@@ -135,7 +136,7 @@ class Pawn(Piece):
 
     def valid_move(self, target_x, target_y, current_player):
         super().valid_move(target_x, target_y, current_player)
-        if target_y != self.y + self.direction and\
+        if target_y != self.y + self.direction and \
                 (target_y != self.y + 2 * self.direction and self.moves == 0):
             return False
         if target_x > self.x + 1 or target_x < self.x - 1:
@@ -171,9 +172,9 @@ class Queen(Piece):
 
     def valid_move(self, target_x, target_y, current_player):
         super().valid_move(target_x, target_y, current_player)
-        if (target_x - self.x) % (target_y - self.y) == 0 or\
-                target_y == self.y or\
-                target_x == self.x:
+        if (target_x - self.x) % (target_y - self.y) == 0 or \
+                        target_y == self.y or \
+                        target_x == self.x:
             return True
         else:
             return False
@@ -260,7 +261,7 @@ class Game:
 
     def coordinates_okay(self, coordinates):
         for i in coordinates:
-            if i < 0 or i > self.board.sizeX-1:
+            if i < 0 or i > self.board.sizeX - 1:
                 return False
         return True
 
@@ -271,4 +272,3 @@ if __name__ == "__main__":
     while game.is_over is not True:
         move = game.move()
         game.board.display()
-
